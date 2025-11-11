@@ -9,14 +9,11 @@ class BrapiService {
   private cacheDuration = parseInt(import.meta.env.VITE_CACHE_DURATION || '300000');
 
   constructor() {
-    const token = import.meta.env.VITE_BRAPI_KEY;
-    
     this.api = axios.create({
       baseURL: this.baseUrl,
       timeout: this.timeout,
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
     });
   }
@@ -147,9 +144,7 @@ class BrapiService {
       const code = error.code || 'UNKNOWN_ERROR';
       
       // Mensagens específicas por status HTTP
-      if (status === 401) {
-        message = 'Token de autenticação inválido ou ausente. Configure VITE_BRAPI_KEY no arquivo .env';
-      } else if (status === 404) {
+      if (status === 404) {
         message = 'Ação não encontrada. Verifique o símbolo digitado';
       } else if (status === 429) {
         message = 'Limite de requisições excedido. Aguarde alguns minutos';

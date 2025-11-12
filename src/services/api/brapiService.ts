@@ -7,6 +7,7 @@ class BrapiService {
   private baseUrl = 'https://brapi.dev/api';
   private timeout = parseInt(import.meta.env.VITE_API_TIMEOUT || '10000');
   private cacheDuration = parseInt(import.meta.env.VITE_CACHE_DURATION || '300000');
+  private token = import.meta.env.VITE_BRAPI_KEY;
 
   constructor() {
     this.api = axios.create({
@@ -32,7 +33,9 @@ class BrapiService {
 
     try {
       console.log(`[API] Buscando ${symbol}...`);
-      const response = await this.api.get<BrapiResponse>(`/quote/${symbol}`);
+      const response = await this.api.get<BrapiResponse>(`/quote/${symbol}`, {
+        params: { token: this.token }
+      });
       
       if (!response.data.results || response.data.results.length === 0) {
         throw new Error(`Ação ${symbol} não encontrada`);
@@ -82,7 +85,8 @@ class BrapiService {
     try {
       console.log(`[API] Buscando ${symbols.length} ações...`);
       const response = await this.api.get<BrapiResponse>(
-        `/quote/${symbols.join(',')}`
+        `/quote/${symbols.join(',')}`,
+        { params: { token: this.token } }
       );
 
       if (!response.data.results) {
@@ -144,7 +148,9 @@ class BrapiService {
       const code = error.code || 'UNKNOWN_ERROR';
       
       // Mensagens específicas por status HTTP
-      if (status === 404) {
+      if (status === 401 || status === 403) {
+        message = 'Token de autenticação inválido ou ausente. Configure VITE_BRAPI_KEY no arquivo .env';
+      } else if (status === 404) {
         message = 'Ação não encontrada. Verifique o símbolo digitado';
       } else if (status === 429) {
         message = 'Limite de requisições excedido. Aguarde alguns minutos';
